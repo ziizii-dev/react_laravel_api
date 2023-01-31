@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Resources\todoResource;
 use App\Http\Requests\StoreToDoRequest;
 use App\Http\Requests\UpdateToDoRequest;
+use App\Models\UserList;
 
 class ToDoController extends Controller
 {
@@ -17,11 +18,11 @@ class ToDoController extends Controller
      */
     public function index()
     {
-        $data = Todo::
+        $data = Todo::where('status',1)->get();
         // select('to_dos.*','user_lists.*')
         //          ->rightJoin('user_lists','user_lists.id','to_dos.user_id')
         //          ->
-                 get();
+                //  get();
                 //  return $data;
                 //  $response = todoResource::collection($data);
         return response()->json([
@@ -52,12 +53,25 @@ class ToDoController extends Controller
     {
         // return $request;
         $validator = $request->validate([
-            "todo" =>"required|string",
-            "user_list_id"=>"required|string",
-            "status"=>"required|integer"
-
+            "todos" =>"nullable",
+            "user_list_id"=>"required|integer",
+            // "status"=>"nullable|integer"
         ]);
-       $data = ToDo::create($validator);
+
+        //  return $validator;
+        foreach($validator["todos"] as $todo){
+            //  ToDo::upDateOrCreate
+             ToDo::Create([
+                'user_list_id' => $validator['user_list_id'],
+                'todo' => $todo
+             ],[
+                'todo' => $todo
+             ]
+        );
+        };
+
+     $data = ToDo::where([['user_list_id',$validator['user_list_id']],['status',1]])->orderBy('id','desc')->get();
+     //    $data = ToDo::all();
         return response()->json([
             "error"=>false,
             "message"=>"create success",
@@ -86,6 +100,38 @@ class ToDoController extends Controller
     {
         //
     }
+    // public function editTodo(Request $request)
+    // {
+    //     $data = [
+    //         "todo"=>$request->id,
+    //         "user_list_id"=>$request->user_list_id,
+    //         // "status"=>$request->status
+    //     ];
+    //     // return $data;
+    //     $response = ToDo::with("userList")->where([
+    //         ['status','=',1],
+    //         ['id',$request->id]
+    //        ])->first();
+    //     // return $response;
+    //     if(isset($response)){
+    //         ToDo::with("userList")->where([
+    //             ['status','=',1],
+    //             ['id',$request->id]
+    //            ])->update($data);
+
+    //     return response()->json([
+    //         "error"=>false,
+    //         "message"=>" success",
+    //         "data"=>$data
+    //        ]);
+    //     }
+    //     // return $response;
+    //     return response()->json([
+    //         "error"=>true,
+    //         "message"=>" there is no data",
+    //         "data"=>$response
+    //        ]);
+    // }
 
     /**
      * Update the specified resource in storage.
@@ -98,13 +144,21 @@ class ToDoController extends Controller
     {
         $data = [
             "todo"=>$request->todo,
-            "user_list_id"=>$request->user_id,
-            "status"=>$request->status
+            "user_list_id"=>$request->user_list_id,
+            // "status"=>$request->status
         ];
-        $update = ToDo::where('id',$id)->first();
+        $update = ToDo::where([
+            ['status','=',1],
+            ['id','=',$id]
+
+           ])->first();
         // return $update;
         if(isset($update)){
-            $response = ToDo::where('id',$id)->update($data);
+            $response = ToDo::where([
+                ['status','=',1],
+                ['id','=',$id]
+
+               ])->orderBy('id','desc')->update($data);
             return response()->json([
                 "error"=>false,
                 "message"=>"update success",
@@ -112,7 +166,7 @@ class ToDoController extends Controller
                ]);
         }
         return response()->json([
-            "error"=>false,
+            "error"=>true,
             "message"=>"there is no data",
             "data"=>$update
            ]);
@@ -131,25 +185,26 @@ class ToDoController extends Controller
             ['status','=',1],
             ['id','=',$id]
 
-           ])->first();
-        // return $data;
-        if(isset($data)){
-           $response= ToDo::where([
-            ['status','=',1],
-            ['id','=',$id]
 
-           ])->delete();
-            // return $response;
+           ])->first();
+
+        if(isset($data)){
+            $data->status=0;
+
+            if($data->save()){
+                return response()->json([
+                    "error"=>false,
+                    "message"=>"delete success",
+                    "data"=>$data
+                   ],200);
+            }
             return response()->json([
-                "error"=>false,
-                "message"=>"delete success",
-                "data"=>$response
+                "error"=>true,
+                "message"=>"There is no data",
+                "data"=>$data
                ],200);
+
         }
-        return response()->json([
-            "error"=>true,
-            "message"=>"There is no data",
-            "data"=>$data
-           ],200);
+
     }
 }

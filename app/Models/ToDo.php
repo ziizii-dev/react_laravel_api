@@ -14,6 +14,6 @@ class ToDo extends Model
           'status'
     ];
     public function userList(){
-        return $this->belongsTo(UserList::class);
+        return $this->belongsTo(UserList::class)->where('status',1);
     }
 }

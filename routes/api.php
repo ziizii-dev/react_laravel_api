@@ -23,3 +23,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::apiResource('/userList',UserListController::class);
 Route::apiResource('/todoList',ToDoController::class);
 Route::post('details',[UserListController::class,'details']);
+Route::post('edit',[ToDoController::class,'editTodo']);

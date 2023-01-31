@@ -16,7 +16,7 @@ class UserListController extends Controller
      */
     public function index()
     {
-        $data =  UserList::get();
+        $data =  UserList::where('status',1)->get();
 
         return response()->json([
             "error"=>"false",
@@ -61,7 +61,8 @@ class UserListController extends Controller
             "name" =>"required|string",
             "email"=>"required|string",
             "phone"=>"required|string",
-            "address"=>"required|string"
+            "address"=>"required|string",
+            // "status"=>"nullable|integer"
         ]);
        $data = UserList::create($validator);
         return response()->json([
@@ -79,7 +80,7 @@ class UserListController extends Controller
      */
     public function details(Request $request)
     {
-
+        // $table->enum('is_approved', array('0','1'))->default('0')->change();
         //  return $id;
 
         // $data = [
@@ -88,17 +89,24 @@ class UserListController extends Controller
         //     "email"=>$request->email,
         //     "phone"=>$request->phone,
         //     "address"=>$request->address
-        //    ];
+        //    ];'id',$request->id
         //    return $data;
-        $response = UserList::with("todos")->where('id',$request->id)->first();
+        $response = UserList::with("todos")->where([
+            ['status','=',1],
+            ['id',$request->id]
+           ])->first();
         // return $response;
         if(isset($response)){
-            $data = UserList::with("todos")->where('id',$request->id)->first();
+            // $data = UserList::with("todos")->where([
+            //     ['status','=',1],
+            //     ['id',$request->id]
+
+            //    ])->first();
             // return $response;
         return response()->json([
             "error"=>false,
             "message"=>" success",
-            "data"=>$data
+            "data"=>$response
            ]);
         }
         // return $response;
@@ -136,10 +144,18 @@ class UserListController extends Controller
             "phone"=>$request->phone,
             "address"=>$request->address
            ];
-           $update = UserList::where('id',$id)->first();
+           $update = UserList::where([
+            ['status','=',1],
+            ['id','=',$id]
+
+           ])->first();
         //    return $update;
         if(isset($update)){
-            $response= UserList::where('id',$id)->update($data);
+            $response= UserList::where([
+                ['status','=',1],
+                ['id','=',$id]
+
+               ])->orderBy('id','desc')->update($data);
             // return $response;
             return response()->json([
                 "error"=>false,
@@ -173,22 +189,65 @@ class UserListController extends Controller
      * @param  \App\Models\UserList  $userList
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+
+     public function destroy($id)
     {
 
-        $delete = UserList::where('id',$id)->first();
-        if(isset($delete)){
-            UserList::where('id',$id)->delete();
+        // $data = UserList::where([
+        //     ['status','=',1],
+        //     ['id','=',$id]
+
+        //    ])->first();
+        // // return $data;
+        // if(isset($data)){
+        //    $response= UserList::where([
+        //     ['status','=',1],
+        //     ['id','=',$id]
+
+        //    ])->delete();
+        //     // return $response;
+        //     return response()->json([
+        //         "error"=>false,
+        //         "message"=>"delete success",
+        //         "data"=>$response
+        //        ],200);
+        // }
+
+        $user = UserList::find($id);
+        if($user){
+            $user->status = 0;
+           if($user->save()) {
             return response()->json([
                 "error"=>false,
                 "message"=>"delete success",
-                "data"=>$delete
+                "data"=>$user
                ],200);
+           }
+           return response()->json([
+                    "error"=>true,
+                    "message"=>"There is no data",
+                    "data"=>$user
+                   ],200);
+
+
         }
-        return response()->json([
-            "error"=>true,
-            "message"=>"There is no data",
-            "data"=>$delete
-           ],200);
     }
+    // public function destroy($id)
+    // {
+
+    //     $delete = UserList::where('id',$id)->first();
+    //     if(isset($delete)){
+    //         UserList::where('id',$id)->delete();
+    //         return response()->json([
+    //             "error"=>false,
+    //             "message"=>"delete success",
+    //             "data"=>$delete
+    //            ],200);
+    //     }
+    //     return response()->json([
+    //         "error"=>true,
+    //         "message"=>"There is no data",
+    //         "data"=>$delete
+    //        ],200);
+    // }
 }

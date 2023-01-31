@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class UserList extends Model
 {
     use HasFactory;
-    protected $fillable = [ 'name','email','phone','address'];
+    protected $fillable = [ 'name','email','phone','address','status'];
     public function todos(){
         return $this->hasMany (Todo::class)->where('status',1);
     }

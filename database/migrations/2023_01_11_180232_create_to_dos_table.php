@@ -16,8 +16,8 @@ return new class extends Migration
         Schema::create('to_dos', function (Blueprint $table) {
             $table->id();
             $table->string('todo');
-            $table->string('user_list_id');
-            $table->integer('status');
+            $table->integer('user_list_id');
+            $table->integer('status')->default('1');
             $table->timestamps();
         });
     }
